@@ -9,9 +9,11 @@ var humidityEl = $("#current-humidity");
 var uvEl = $("#index-icon");
 var weatherIcon = $("#weather-icon");
 var fiveDay = $("#five-day");
-
-
 var myKey = "c2ae361906945c54dfb65306f66ae837";
+
+
+loadPastSearches();
+
 
 searchBtn.on("click", function(event) {
     event.preventDefault();
@@ -20,12 +22,13 @@ searchBtn.on("click", function(event) {
         var cityStateArr = cityState.split(",");
         var city = cityStateArr[0].trim();
         var state = cityStateArr[1].trim();
+        saveSearch((city + ", " + state))
         var searchURL = "http://api.openweathermap.org/geo/1.0/direct?q=" + city + "," + state + ",USA&limit=5&appid=" + myKey;
     } else {
         var searchURL = "http://api.openweathermap.org/geo/1.0/direct?q=" + cityState.trim() + "&limit=5&appid=" + myKey;
+        saveSearch(cityState);
     }
-    console.log(searchURL);
-
+    
     fetch(searchURL)
     .then(function(response) {
         return response.json();
@@ -98,7 +101,6 @@ function postFiveDay(data) {
         var wind = data.daily[i].wind_speed + " MPH";
         var humidity = data.daily[i].humidity + "%";
         var forecastDate = moment().add(i + 1, 'days').format('L');
-        console.log(forecastDate);
 
         // Create div holding the information.
         var liEl = $('<li class="bg-dark text-white flex-fill mx-1">')
@@ -122,3 +124,41 @@ function postFiveDay(data) {
         fiveDay.append(liEl);
     }
 }
+
+function loadPastSearches() {
+    var pastCities = localStorage.getItem("pastCities");
+    console.log(pastCities);
+    if (pastCities != null) {
+        var pastCitiesJson = JSON.parse(pastCities);
+        pastSearchesEl.html("");
+        for (let i=0; i < pastCitiesJson.length; i++) {
+            var newBtn = $('<button class="list-group-item  mt-3 border border-3 rounded-pill bg-success text-light">');
+            newBtn.text(pastCitiesJson[i]);
+            pastSearchesEl.append(newBtn);
+        }
+    }
+    console.log("Past cities: " + pastCitiesJson);
+}
+
+function saveSearch(city) {
+    var pastCities = localStorage.getItem("pastCities");
+    var citySearchArray = [];
+    if (pastCities != null) {
+        citySearchArray = JSON.parse(pastCities);
+    }
+    // if the array is longer than 5 and doesn't have the new city, 
+    // the new city is added at the beginning and the last city is removed.
+    // If the city is already in the array, it is moved to index 0;
+    if (citySearchArray.length > 5 && !citySearchArray.includes(city)) {
+        citySearchArray.pop();
+        citySearchArray.unshift(city)
+    } else if(citySearchArray.length > 5) {
+        var cityIndex = citySearchArray.indexOf(city);
+        citySearchArray.unshift(citySearchArray.splice(cityIndex));
+    } else {
+        citySearchArray.unshift(city);
+    }
+    localStorage.setItem('pastCities', JSON.stringify(citySearchArray));
+    console.log(localStorage.pastCities);
+    loadPastSearches();
+} 
