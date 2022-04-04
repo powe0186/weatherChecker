@@ -10,6 +10,7 @@ var uvEl = $("#index-icon");
 var weatherIcon = $("#weather-icon");
 var fiveDay = $("#five-day");
 var myKey = "c2ae361906945c54dfb65306f66ae837";
+var cityState;
 
 
 loadPastSearches();
@@ -17,8 +18,14 @@ loadPastSearches();
 
 searchBtn.on("click", function(event) {
     event.preventDefault();
-    var cityState = userInput.val()
+    cityState = userInput.val();
+    getResults(cityState);
     userInput.val('');
+    
+    
+});
+
+function getResults(cityState) {
     if (cityState.includes(',')) {
         var cityStateArr = cityState.split(",");
         var city = cityStateArr[0].trim();
@@ -36,19 +43,25 @@ searchBtn.on("click", function(event) {
         return response.json();
     })
     .then(function(data) {
-        var lat = data[0].lat;
-        var lon = data[0].lon;
-        getWeather(lat, lon);
-    })
-    
+        console.log(data);
+            if (data.length > 0) {
+            var lat = data[0].lat;
+            var lon = data[0].lon;
+            getWeather(lat, lon);
+        } else {
+            cityEl.text('Please enter a valid City')
+        }
+    });
+}
+
+// // Event listener on past searches buttons.
+pastSearchesEl.on("click", function(event) {
+    var element = event.target;
+    if (element.matches("button")) {
+        cityState = (element.getAttribute('data-city'));
+        getResults(cityState);
+    }
 });
-
-
-// Event listener on past searches buttons.
-// pastSearchesEl.on("click", function(event) {
-//     var targetClass = $(event.target).attr("class");
-//     console.log(targetClass);
-// });
 
 function getWeather(lat, lon) {
     var searchURL = "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&appid=" + myKey;
@@ -75,18 +88,18 @@ function kelvinToFahr(kelv) {
 }
 
 function postCurrentWeather(temp, wind, humidity, uvIndex) {
-    var city = userInput.val();
-    $("#city").text(city + " - " + moment().format("L"));
+    $("#city").text(cityState + " - " + moment().format("L"));
 
     tempEl.text("Temperature: " + temp + "\u00B0F");
     windEl.text("Wind: " + wind + " MPH");
     humidityEl.text("Humidity: " + humidity + "%");
-    uvEl.text(uvIndex);
+    uvEl.text("UV Index: " + uvIndex);
 
     if (uvIndex < 3) {
         uvEl.css('background-color', 'green');
     } else if (uvIndex < 6) {
         uvEl.css('background-color', 'yellow');
+        uvEl.css('color', 'black');
     } else if (uvIndex < 8) {
         uvEl.css('background-color', 'orange');
     } else if (uvIndex < 11) {
@@ -138,6 +151,7 @@ function loadPastSearches() {
         pastSearchesEl.html("");
         for (let i=0; i < pastCitiesJson.length; i++) {
             var newBtn = $('<button class="list-group-item  mt-3 border border-3 rounded-pill bg-success text-light">');
+            newBtn.attr("data-city", pastCitiesJson[i]);
             newBtn.text(pastCitiesJson[i]);
             pastSearchesEl.append(newBtn);
         }
@@ -158,7 +172,6 @@ function saveSearch(city) {
         var cityIndex = citySearchArray.indexOf(city);
         var repeatCity = citySearchArray[cityIndex];
         citySearchArray.splice(cityIndex, 1);
-        console.log(repeatCity);
         citySearchArray.unshift(repeatCity);
     } else if (citySearchArray.length > 4) {
         citySearchArray.pop();
@@ -166,7 +179,11 @@ function saveSearch(city) {
     } else {
         citySearchArray.push(city);
     }
-    console.log(JSON.stringify(citySearchArray));
     localStorage.setItem('pastCities', JSON.stringify(citySearchArray));
     loadPastSearches();
 } 
+
+//Clicking on UV box will send you to an explanation of UV Index.
+uvEl.on('click', function() {
+    window.location = "https://www.epa.gov/sunsafety/uv-index-scale-0";  
+})
