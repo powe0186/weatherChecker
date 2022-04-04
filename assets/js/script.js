@@ -18,11 +18,13 @@ loadPastSearches();
 searchBtn.on("click", function(event) {
     event.preventDefault();
     var cityState = userInput.val()
+    userInput.val('');
     if (cityState.includes(',')) {
         var cityStateArr = cityState.split(",");
         var city = cityStateArr[0].trim();
         var state = cityStateArr[1].trim();
-        saveSearch((city + ", " + state))
+        var search = city + "," + state;
+        saveSearch(search);
         var searchURL = "http://api.openweathermap.org/geo/1.0/direct?q=" + city + "," + state + ",USA&limit=5&appid=" + myKey;
     } else {
         var searchURL = "http://api.openweathermap.org/geo/1.0/direct?q=" + cityState.trim() + "&limit=5&appid=" + myKey;
@@ -41,17 +43,21 @@ searchBtn.on("click", function(event) {
     
 });
 
+
+// Event listener on past searches buttons.
+// pastSearchesEl.on("click", function(event) {
+//     var targetClass = $(event.target).attr("class");
+//     console.log(targetClass);
+// });
+
 function getWeather(lat, lon) {
     var searchURL = "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&appid=" + myKey;
-    console.log(searchURL);
     fetch(searchURL)
     .then(function(response) {
         return response.json(); 
     }).then(function(data) {
-        console.log(data);
         var iconCode = data.current.weather[0].icon;
         var iconURL = "http://openweathermap.org/img/wn/" + iconCode + "@2x.png"
-        console.log(iconURL);
         weatherIcon.attr("src", iconURL);
         weatherIcon.attr("alt", "weather icon");
         var temp = kelvinToFahr(data.current.temp);
@@ -127,7 +133,6 @@ function postFiveDay(data) {
 
 function loadPastSearches() {
     var pastCities = localStorage.getItem("pastCities");
-    console.log(pastCities);
     if (pastCities != null) {
         var pastCitiesJson = JSON.parse(pastCities);
         pastSearchesEl.html("");
@@ -137,7 +142,6 @@ function loadPastSearches() {
             pastSearchesEl.append(newBtn);
         }
     }
-    console.log("Past cities: " + pastCitiesJson);
 }
 
 function saveSearch(city) {
@@ -149,16 +153,20 @@ function saveSearch(city) {
     // if the array is longer than 5 and doesn't have the new city, 
     // the new city is added at the beginning and the last city is removed.
     // If the city is already in the array, it is moved to index 0;
-    if (citySearchArray.length > 5 && !citySearchArray.includes(city)) {
+
+    if (citySearchArray.includes(city)) {
+        var cityIndex = citySearchArray.indexOf(city);
+        var repeatCity = citySearchArray[cityIndex];
+        citySearchArray.splice(cityIndex, 1);
+        console.log(repeatCity);
+        citySearchArray.unshift(repeatCity);
+    } else if (citySearchArray.length > 4) {
         citySearchArray.pop();
         citySearchArray.unshift(city)
-    } else if(citySearchArray.length > 5) {
-        var cityIndex = citySearchArray.indexOf(city);
-        citySearchArray.unshift(citySearchArray.splice(cityIndex));
     } else {
-        citySearchArray.unshift(city);
+        citySearchArray.push(city);
     }
+    console.log(JSON.stringify(citySearchArray));
     localStorage.setItem('pastCities', JSON.stringify(citySearchArray));
-    console.log(localStorage.pastCities);
     loadPastSearches();
 } 
