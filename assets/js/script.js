@@ -15,7 +15,7 @@ var cityState;
 
 loadPastSearches();
 
-
+//event handler for the button to initiate search.
 searchBtn.on("click", function(event) {
     event.preventDefault();
     cityState = userInput.val();
@@ -25,7 +25,9 @@ searchBtn.on("click", function(event) {
     
 });
 
+
 function getResults(cityState) {
+    //check to see if the user did city, state or just a city.Then create api URL.
     if (cityState.includes(',')) {
         var cityStateArr = cityState.split(",");
         var city = cityStateArr[0].trim();
@@ -38,6 +40,7 @@ function getResults(cityState) {
         saveSearch(cityState);
     }
     
+    //fetch api data for Lat and Lon of city. then use them in getWeather();
     fetch(searchURL)
     .then(function(response) {
         return response.json();
@@ -63,16 +66,20 @@ pastSearchesEl.on("click", function(event) {
     }
 });
 
+
+//Use Lat and Lon to get weather atthat location.
 function getWeather(lat, lon) {
     var searchURL = "https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&appid=" + myKey;
     fetch(searchURL)
     .then(function(response) {
         return response.json(); 
     }).then(function(data) {
+        // Get the icon for the current weather.
         var iconCode = data.current.weather[0].icon;
         var iconURL = "http://openweathermap.org/img/wn/" + iconCode + "@2x.png"
         weatherIcon.attr("src", iconURL);
         weatherIcon.attr("alt", "weather icon");
+        // get the weather stats
         var temp = kelvinToFahr(data.current.temp);
         var wind = data.current.wind_speed;
         var humidity = data.current.humidity;
@@ -88,13 +95,14 @@ function kelvinToFahr(kelv) {
 }
 
 function postCurrentWeather(temp, wind, humidity, uvIndex) {
+    //use the current weather stats to create a display in the webpage.
     $("#city").text(cityState + " - " + moment().format("L"));
-
     tempEl.text("Temperature: " + temp + "\u00B0F");
     windEl.text("Wind: " + wind + " MPH");
     humidityEl.text("Humidity: " + humidity + "%");
     uvEl.text("UV Index: " + uvIndex);
 
+    // Set the UV index button to the correct color based on the UV index scale.
     if (uvIndex < 3) {
         uvEl.css('background-color', 'green');
     } else if (uvIndex < 6) {
@@ -145,6 +153,7 @@ function postFiveDay(data) {
 }
 
 function loadPastSearches() {
+    // Get the past searches from local storage
     var pastCities = localStorage.getItem("pastCities");
     if (pastCities != null) {
         var pastCitiesJson = JSON.parse(pastCities);
