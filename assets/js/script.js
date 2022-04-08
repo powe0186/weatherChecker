@@ -34,9 +34,9 @@ function getResults(cityState) {
         var state = cityStateArr[1].trim();
         var search = city + "," + state;
         saveSearch(search);
-        var searchURL = "http://api.openweathermap.org/geo/1.0/direct?q=" + city + "," + state + ",USA&limit=5&appid=" + myKey;
+        var searchURL = "https://api.openweathermap.org/geo/1.0/direct?q=" + city + "," + state + ",USA&limit=5&appid=" + myKey;
     } else {
-        var searchURL = "http://api.openweathermap.org/geo/1.0/direct?q=" + cityState.trim() + "&limit=5&appid=" + myKey;
+        var searchURL = "https://api.openweathermap.org/geo/1.0/direct?q=" + cityState.trim() + "&limit=5&appid=" + myKey;
         saveSearch(cityState);
     }
     
