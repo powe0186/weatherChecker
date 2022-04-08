@@ -76,7 +76,7 @@ function getWeather(lat, lon) {
     }).then(function(data) {
         // Get the icon for the current weather.
         var iconCode = data.current.weather[0].icon;
-        var iconURL = "http://openweathermap.org/img/wn/" + iconCode + "@2x.png"
+        var iconURL = "https://openweathermap.org/img/wn/" + iconCode + "@2x.png"
         weatherIcon.attr("src", iconURL);
         weatherIcon.attr("alt", "weather icon");
         // get the weather stats
